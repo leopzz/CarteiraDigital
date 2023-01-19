@@ -1,0 +1,225 @@
+﻿
+
+<div class="container-fluid text-center" style="margin-top: 50px;">
+    <div style="margin: 30px">
+        <a class="fs-4 text-decoration-none navbar-brand" style="margin: 50px">Saldo atual: R$<span data-bind="text: Saldo"></span></a>
+    </div>
+    <div>
+        <a class="navbar-brand fs-4">Relatório</a>
+         @*Modal*@
+        <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="exampleModalLabel">Desc</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="border:none; border-style:none;"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p id="modalDesc"></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @* Modal End *@
+    <form class="form-control d-flex flex-row justify-content-around col-8">
+        <div class="d-flex flex-column">
+            <label>Tipo</label>
+            <select class="form-control form-select" id="exampleFormControlSelect1" data-bind="value: Tipo">
+                <option>Entrada e Saída</option>
+                <option>Entrada</option>
+                <option>Saída</option>
+            </select>
+        </div>
+        <div class="d-flex flex-column">
+            <label>Data Início</label>
+            <input type="date" class="btn btn-default" style="border: 1px solid lightgray" data-bind="value: DataIni" />
+        </div>
+        <div class="d-flex flex-column">
+            <label>Data Fim</label>
+            <input type="date" class="btn btn-default" style="border: 1px solid lightgray" data-bind="value: DataFim" />
+        </div>
+        <div class="d-flex flex-column justify-content-center">
+            <button class="btn btn-success h-75" data-bind="click: call.bind(Tipo())">Aplicar</button>
+        </div>
+    </form>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">Número</th>
+                    <th scope="col">Data</th>
+                    <th scope="col">Descrição</th>
+                    <th scope="col">Tipo (E/S)</th>
+                    <th scope="col">Valor</th>
+                    <th scope="col">Saldo</th>
+                </tr>
+            </thead>
+            <tbody id="Tabela">
+            </tbody>
+        </table>
+    </div>
+</div>
+<script src="~/Scripts/jquery-3.4.1.js"></script>
+<script type="text/javascript">
+
+    function call(Valor) {
+        Render(Valor.Tipo(), Valor.DataIni(), Valor.DataFim())
+    }
+    var Id = localStorage.getItem("Id")
+    $.ajax({
+        type: "POST",
+        url: "/Repositorio/UltimasMovimentacoes",
+        content: "application/json; charset=utf-8",
+        dataType: "json",
+        data: {
+            Id: Id
+        },
+        success: function (Res) {
+            var ResSor = Res.sort((x, i) => parseInt(x.Data.split("(")[1].split(")")[0]) - parseInt(i.Data.split("(")[1].split(")")[0]))
+            var ResLis = Res.reverse()
+            renderView(Res)
+        },
+        error: function () {
+            alert("error");
+        }
+    });
+    function Render(Tipo, dataIni, dataFim) {
+        var Id = localStorage.getItem("Id")
+        $.ajax({
+            type: "POST",
+            url: "/Repositorio/UltimasMovimentacoes",
+            content: "application/json; charset=utf-8",
+            dataType: "json",
+            data: {
+                Id: Id
+            },
+            success: function (Res) {
+                var ResSor = Res.sort((x, i) => parseInt(x.Data.split("(")[1].split(")")[0]) - parseInt(i.Data.split("(")[1].split(")")[0]))
+                var ResLis = Res.reverse()
+                if (dataIni == undefined) {
+                    var DataIni = null
+                } else {
+                    var DataIni = new Date(dataIni)
+                }
+                if (dataFim == undefined) {
+                    var DataFim = null
+                } else {
+                    var DataFim = new Date(dataFim)
+                }
+                if (DataFim == "Invalid Date") {
+                    DataFim = null
+                }
+                if (DataIni == "Invalid Date") {
+                    DataIni = null
+                }
+                
+
+                if (Tipo == "Entrada e Saída") {
+                    if (DataIni == null && DataFim == null) {
+                        renderView(Res)
+                    } else if (DataFim == null) {
+                        var filter = Res.filter(i => parseInt(i.Data.split("(")[1].split(")")[0]) > DataIni)
+                        renderView(filter)
+                    } else if (DataIni == null) {
+                        var filter = Res.filter(i => parseInt(i.Data.split("(")[1].split(")")[0]) < DataFim)
+                        renderView(filter)
+                    } else {
+                        var filter = Res.filter(i => parseInt(i.Data.split("(")[1].split(")")[0]) < DataFim && parseInt(i.Data.split("(")[1].split(")")[0]) > DataIni)
+                        renderView(filter)
+                    }
+                } else {
+                    resFilterTipo = Res.filter(i => i.Tipo == Tipo)
+                    if (DataIni == null && DataFim == null) {
+                        renderView(resFilterTipo)
+                    } else if (DataFim == null) {
+                        console.log(DataFim)
+                        console.log(DataIni.getTime(), parseInt(resFilterTipo[0].Data.split("(")[1].split(")")[0]))
+                        var filtered = resFilterTipo.filter(i => parseInt(i.Data.split("(")[1].split(")")[0]) > DataIni.getTime())
+                        renderView(filtered)
+                    } else if (DataIni == null) {
+                        var filter = resFilterTipo.filter(i => parseInt(i.Data.split("(")[1].split(")")[0]) < DataFim.getTime())
+                        renderView(filter)
+                    } else {
+                        var filter = resFilterTipo.filter(i => parseInt(i.Data.split("(")[1].split(")")[0]) < DataFim.getTime() && parseInt(i.Data.split("(")[1].split(")")[0]) > DataIni.getTime())
+                        renderView(filter)
+                    }
+                }
+            },
+            error: function () {
+                alert("error");
+            }
+        });
+        
+    }
+    function renderView(Res) {
+        $("#Tabela").html('').appendTo($("#Tabela"));
+        for (var i in Res) {
+
+            var Id = Res[i].Numero
+            var Data0 = Res[i].Data.split("(")[1]
+            var Data1 = Data0.split(")")[0]
+            var Data = new Date(parseInt(Data1)).toLocaleDateString()
+
+            var ValorStr = Res[i].Valor.replace(",", ".")
+            var ValorFlt = parseFloat(ValorStr)
+            var Valor = Math.floor(ValorFlt * 1000) / 1000
+
+            var SaldoStr = Res[i].Saldo.replace(",", ".")
+            var SaldoFlt = parseFloat(SaldoStr).toFixed(3)
+            var Saldo = Math.floor(SaldoFlt * 1000) / 1000
+            var Desc = Res[i].Descricao
+ 
+
+            $("#Tabela").add('<tr id=' + Id + '><th scope="row">' + Id + '</th></tr>').appendTo($("#Tabela"));
+            $(document.getElementById(Id)).add('<td>' + Data + '</td>').appendTo(document.getElementById(Id));
+            $(document.getElementById(Id)).add('<td>' + Desc + '</td>').appendTo(document.getElementById(Id));
+            $(document.getElementById(Id)).add('<td>' + Res[i].Tipo + '</td>').appendTo(document.getElementById(Id));
+            $(document.getElementById(Id)).add('<td> R$' + Valor + '</td>').appendTo(document.getElementById(Id));
+            $(document.getElementById(Id)).add('<td> R$' + Saldo + '</td>').appendTo(document.getElementById(Id));
+        }
+    }
+
+
+    $.ajax({
+        type: "POST",
+        url: "/Repositorio/getSaldo",
+        content: "application/json; charset=utf-8",
+        dataType: "json",
+        data: {
+            Id: Id
+        },
+        success: function (Saldo) {
+            localStorage.setItem("Saldo", Saldo)
+        },
+        error: function () {
+            alert("error");
+        }
+    });
+    function openModal(Desc) {
+        document.getElementById("modalDesc").innerHTML = Desc
+
+    }
+    function movimentacao(Saldo, DataIni, DataFim, Tipo, Usuario) {
+        this.Saldo = Saldo
+        this.DataIni = DataIni
+        this.DataFim = DataFim
+        this.Tipo = Tipo
+        this.Usuario = Usuario
+    }
+    function movimentacaoViewModel(prop) {
+        this.Saldo = ko.observable(prop.Saldo);
+        this.DataIni = ko.observable(prop.DataIni);
+        this.DataFim = ko.observable(prop.DataFim);
+        this.Tipo = ko.observable(prop.Tipo);
+        this.Usuario = localStorage.getItem("Nome");
+
+    }
+
+    var prop = new movimentacao()
+    var Movimento = new movimentacaoViewModel(prop)
+    Movimento.Saldo(localStorage.getItem("Saldo"))
+    ko.applyBindings(Movimento);
+
+</script>
