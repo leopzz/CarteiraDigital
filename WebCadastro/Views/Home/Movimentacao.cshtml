@@ -17,11 +17,11 @@
             </div>
             <label>Descrição</label>
             <div class="form-group d-flex justify-content-center gap-4">
-                <textarea class="form-control" id="valorDescricao" rows="3" data-bind="value: Descricao" required></textarea>
+                <textarea class="form-control" id="valorDescricao" rows="3" data-bind="value: Descricao, click: reset" required></textarea>
             </div>
             <label>Valor</label>
             <div class="form-group d-flex justify-content-center gap-4">
-                <input class="form-control" type="text" id="valorInput" data-bind="value: Valor" placeholder="Valor"/>
+                <input class="form-control" type="text" id="valorInput" data-bind="value: Valor, click: reset" placeholder="Valor" />
             </div>
             <div>
                 <button class="btn btn-success" type="submit" data-bind="click: Send.bind(Tipo())">Concluir</button>
@@ -29,160 +29,6 @@
         </form>
     </div>
 </div>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="~/Scripts/jquery-3.4.1.js"></script>
-<script type="text/javascript">
-
-    var DATA;
-    var Id = localStorage.getItem("Id")
-    $.ajax({
-        async: false,
-        type: "POST",
-        url: "/Repositorio/getUserInfo",
-        content: "application/json; charset=utf-8",
-        dataType: "json",
-        data: { Id: Id },
-        success: function (Response) {
-            localStorage.setItem("Saldo", Response.PES_SALDO)
-            DATA = Response
-        },
-        error: function () {
-            alert("error");
-        }
-    });
-
-    function Send(prop) {
-        if (isNaN(prop.Valor())) {
-            alert("Digite um número válido")
-            $('#valorInput').addClass('is-invalid');
-            return
-        }
-        if (prop.Valor() == null || prop.Valor() == "") {
-            console.log("Caiu")
-            $('#valorInput').addClass('is-invalid');
-            if (prop.Descricao() == null || prop.Descricao() == "") {
-                $('#valorDescricao').addClass('is-invalid');
-                alert("Valores Inválidos")
-            }
-            return
-        }
-        if (prop.Descricao() == null || prop.Descricao() == "") {
-            $('#valorDescricao').addClass('is-invalid');
-            alert("Valores Inválidos")
-            return
-        }
-
-
-        var Id = localStorage.getItem("Id")
-        var today = new Date();
-        var date = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
-        var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
-        var currentDate = date + ' ' + time;
-        var Valor = prop.Valor()
-        if (prop.Tipo() == "Saída") {
-            var Saldo = localStorage.getItem("Saldo")
-            if (parseInt(prop.Valor()) > parseInt(Saldo)) {
-                alert("Não é permitido ter um saldo negativo")
-                return
-            }
-            console.log(DATA)
-            if (parseFloat(DATA.PES_SALDO) - parseFloat(prop.Valor()) < parseFloat(DATA.PES_MINIMO)) {
-                alert("Abaixo do Limite!")
-            }
-            var Tipo = "Saida"
-            $.ajax({
-                type: "POST",
-                url: "/Repositorio/" + Tipo,
-                content: "application/json; charset=utf-8",
-                dataType: "json",
-                data: {
-                    PES_ID: Id,
-                    SAI_DATA: currentDate,
-                    SAI_DESCRICAO: prop.Descricao(),
-                    SAI_VALOR: Valor,
-                    PES_SALDO: JSON.stringify(parseFloat(localStorage.getItem("Saldo")) - parseFloat(Valor))
-                },
-                success: function (Usuario) {
-                    var Id = localStorage.getItem("Id")
-                    $.ajax({
-                        type: "POST",
-                        url: "/Repositorio/getSaldo",
-                        content: "application/json; charset=utf-8",
-                        dataType: "json",
-                        data: {
-                            Id: Id
-                        },
-                        success: function (Saldo) {
-                            localStorage.setItem("Saldo", Saldo)
-                        },
-                        error: function () {
-                            alert("error");
-                        }
-                    });
-                    window.location.href = "/Home/Movimentacao";
-                },
-                error: function () {
-                    alert("error");
-                }
-            });
-        } else {
-            var Tipo = "Entrada"
-            $.ajax({
-                type: "POST",
-                url: "/Repositorio/" + Tipo,
-                content: "application/json; charset=utf-8",
-                dataType: "json",
-                data: {
-                    PES_ID: Id,
-                    ENT_DATA: currentDate,
-                    ENT_DESCRICAO: prop.Descricao(),
-                    ENT_VALOR: Valor,
-                    PES_SALDO: JSON.stringify(parseFloat(localStorage.getItem("Saldo")) + parseFloat(Valor)),
-                },
-                success: function (Usuario) {
-                    var Id = localStorage.getItem("Id")
-                    $.ajax({
-                        type: "POST",
-                        url: "/Repositorio/getSaldo",
-                        content: "application/json; charset=utf-8",
-                        dataType: "json",
-                        data: {
-                            Id: Id
-                        },
-                        success: function (Saldo) {
-                            localStorage.setItem("Saldo", Saldo)
-                        },
-                        error: function () {
-                            alert("error");
-                        }
-                    });
-                    window.location.href = "/Home/Movimentacao";
-                },
-                error: function () {
-                    alert("error");
-                }
-            });
-        }
-
-
-    }
-
-    function movimentacao(Saldo, Tipo, Descricao, Valor, Usuario) {
-        this.Tipo = Tipo
-        this.Descricao = Descricao
-        this.Valor = Valor
-        this.Saldo = Saldo
-        this.Usuario = Usuario
-    }
-    function movimentacaoViewModel(prop) {
-        this.Tipo = ko.observable(prop.Tipo);
-        this.Descricao = ko.observable(prop.Descricao);
-        this.Valor = ko.observable(prop.Valor);
-        this.Saldo = ko.observable(prop.Saldo);
-        this.Usuario = localStorage.getItem("Nome")
-    }
-    var prop = new movimentacao("", "")
-    var Movimento = new movimentacaoViewModel(prop)
-    Movimento.Saldo(localStorage.getItem("Saldo"))
-    ko.applyBindings(Movimento);
-
-</script>
+@Scripts.Render("~/bundles/Home/Movimentacao")

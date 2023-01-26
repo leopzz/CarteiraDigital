@@ -20,5 +20,9 @@ namespace WebCadastro.Controllers
         {
             return View();
         }
+        public ActionResult Conta()
+        {
+            return View();
+        }
     }
 }

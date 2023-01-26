@@ -1,6 +1,7 @@
 ﻿@{
     Layout = null;
 }
+@model WebCadastro.Models.Pessoas
 
 <!DOCTYPE html>
 <html>
@@ -9,7 +10,6 @@
     <meta charset="utf-8" />
     <link href="~/Content/Site.css" rel="stylesheet" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="~/Scripts/knockout-3.5.1.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script>
     <title>Login</title>
@@ -34,7 +34,7 @@
                                 <a class="nav-link n" onclick="return PageCheck()" href="/Adm/Movimentacao">Movimentação</a>
                             </li>
                             <li class="nav-item fs-5">
-                                <a class="nav-link" href="#">Adm - <span data-bind="text: Nome"></span></a>
+                                <a class="nav-link" onclick="return PageCheck()" href="/Adm/Conta">Adm - <span data-bind="text: Nome"></span></a>
                             </li>
                         </ul>
                         <div class="col-12 text-center">
@@ -49,118 +49,47 @@
         <div style="margin: 15px">
             <a class="navbar-brand fs-4">Pessoas Cadastradas</a>
         </div>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th scope="col">Id</th>
-                    <th scope="col">Nome</th>
-                    <th scope="col">Email</th>
-                    <th scope="col">Salario</th>
-                    <th scope="col">Limite</th>
-                    <th scope="col">Minimo</th>
-                    <th scope="col">Saldo</th>
-                    <th scope="col">#</th>
-                </tr>
-            </thead>
-            <tbody id="Tabela">
-            </tbody>
-        </table>
+        <div id="FormFilter">
+            <form class="form-control d-flex flex-row justify-content-around col-8">
+                <div class="d-flex flex-column">
+                    <label>Buscar Id</label>
+                    <input type="text" class="form-control" placeholder="Id" data-bind="value: BuscarId" />
+                </div>
+                <div class="d-flex flex-column">
+                    <label>Buscar Nome</label>
+                    <input type="text" class="form-control" placeholder="Nome" data-bind="value: BuscarNome" />
+                </div>
+                <div class="d-flex flex-column">
+                    <label>Buscar Email</label>
+                    <input type="text" class="form-control" placeholder="Email" data-bind="value: BuscarEmail" />
+                </div>
+                <div class="d-flex flex-column justify-content-end">
+                    <button class="btn btn-success" data-bind="click: call.bind(BuscarId())" style="">Aplicar</button>
+                </div>
+            </form>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th scope="col">Id</th>
+                        <th scope="col">Nome</th>
+                        <th scope="col">Email</th>
+                        <th scope="col">Salario</th>
+                        <th scope="col">Limite</th>
+                        <th scope="col">Minimo</th>
+                        <th scope="col">Saldo</th>
+                        <th scope="col">Selecionar</th>
+                        <th scope="col">Deletar</th>
+                    </tr>
+                </thead>
+                <tbody id="Tabela">
+                </tbody>
+            </table>
+        </div>
     </div>
     <script src="~/Scripts/jquery-3.4.1.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="~/Scripts/knockout-3.5.1.js"></script>
-    <script type="text/javascript">
-        function PageCheck() {
-            if (sessionStorage.getItem("Id") == null) {
-                alert("Selecione um usuário")
-                return false
-            } else {
-                return true
-            }
-       }
-
-
-        if (localStorage.getItem("Id") != 3) {
-            localStorage.clear()
-            window.location.href = "/Login/Index"
-        }
-        function Sair() {
-            localStorage.clear()
-            window.location.href = "/Login/Index"
-        }
-
-
-
-
-
-        var DATA;
-        $.ajax({
-            async: false,
-            type: "POST",
-            url: "/Repositorio/getAllUser",
-            content: "application/json; charset=utf-8",
-            dataType: "json",
-            data: {},
-            success: function (Response) {
-                DATA = Response
-            },
-            error: function () {
-                alert("error");
-            }
-        });
-        console.log(DATA)
-        Render(DATA)
-        function Render(Res) {
-            var ResLis = Res.reverse()
-            for (var i in Res) {
-                var Id = Res[i].PES_ID
-                var Desc = Res[i].Descricao
-                $("#Tabela").add('<tr id=' + Res[i].PES_ID + '><th scope="row">' + Res[i].PES_ID + '</th></tr>').appendTo($("#Tabela"));
-                $(document.getElementById(Id)).add('<td>' + Res[i].PES_NOME + '</td>').appendTo(document.getElementById(Id));
-                $(document.getElementById(Id)).add('<td>' + Res[i].PES_EMAIL + '</td>').appendTo(document.getElementById(Id));
-                $(document.getElementById(Id)).add('<td> R$' + Res[i].PES_SALARIO + '</td>').appendTo(document.getElementById(Id));
-                $(document.getElementById(Id)).add('<td> R$' + Res[i].PES_LIMITE + '</td>').appendTo(document.getElementById(Id));
-                $(document.getElementById(Id)).add('<td> R$' + Res[i].PES_MINIMO + '</td>').appendTo(document.getElementById(Id));
-                $(document.getElementById(Id)).add('<td> R$' + Res[i].PES_SALDO + '</td>').appendTo(document.getElementById(Id));
-                $(document.getElementById(Id)).add('<th><button id="'+"BTN"+Res[i].PES_ID+'" onclick="{Selecionar(this.id)}" class="btn btn-default">Selecionar</button></th>').appendTo(document.getElementById(Id));
-            }
-
-        }
-        var DATA;
-        function Selecionar(IdT) {
-            console.log(IdT)
-            var Id = IdT.split("BTN")[1]
-            console.log(Id)
-            sessionStorage.setItem("Id", Id)
-            $.ajax({
-                async: false,
-                type: "POST",
-                url: "/Repositorio/getNome",
-                content: "application/json; charset=utf-8",
-                dataType: "json",
-                data: { Id: Id },
-                success: function (Response) {
-                    DATA = Response
-                    Movimento.Nome(DATA)
-                    sessionStorage.setItem("Nome", DATA)
-                },
-                error: function () {
-                    alert("error");
-                }
-            });
-        }
-        function movimentacao(Nome) {
-            this.Nome = Nome
-        }
-        function movimentacaoViewModel(prop) {
-            this.Nome = ko.observable(prop.Nome);
-            
-        }
-        var prop = new movimentacao("", "")
-        var Movimento = new movimentacaoViewModel(prop)
-        Movimento.Nome(sessionStorage.getItem("Nome"))
-        ko.applyBindings(Movimento);
-
-    </script>
+    @Scripts.Render("~/bundles/Adm/Index")
 
 
 

@@ -8,70 +8,43 @@
 
 <div class="container text-center m-auto">
     <div class="container body-content d-flex justify-content-center gap-2">
-        <div class="d-flex flex-column gap-4 col-10 col-sm-8 col-md-5 col-lg-4 justify-content-center align-items-center flex-wrap shadow p-3 mb-5 bg-body-tertiary rounded" style="background-color:lightgray">
+        <div class="d-flex flex-column gap-4 col-sm-8 col-md-5 col-lg-7 justify-content-center align-items-center flex-wrap shadow p-3 mb-5 bg-body-tertiary rounded" style="background-color:lightgray">
             <h3>Cadastro</h3>
-            <input class="form-control" type="text" placeholder="Nome" data-bind="value: Nome" />
-            <input class="form-control" type="text" placeholder="Email" data-bind="value: Email" />
-            <input class="form-control" type="password" placeholder="Senha" data-bind="value: Senha" />
-            <input class="form-control" type="text" placeholder="Salário" data-bind="value: Salario" />
-            <input class="form-control" type="text" placeholder="Limite de gasto" data-bind="value: Limite" />
-            <input class="form-control" type="text" placeholder="Aviso de mínimo" data-bind="value: Minimo" />
-            <div class="text-start col-9">
+            <div class="d-flex flex-row gap-3 m-auto col-12 justify-content-center">
+                <label class="col-sm-2 col-form-label" for="Nome">Nome:*</label>
+                <input id="Nome" class="form-control" type="text" placeholder="Nome" data-bind="value: Nome, click: reset" />
+            </div>
+            <div class="d-flex flex-row gap-3 m-auto col-12 justify-content-center">
+                <label class="col-sm-2 col-form-label" for="Nome">Email:*</label>
+                <input id="Email" class="form-control" type="text" placeholder="Email" data-bind="value: Email, click: reset" />
+            </div>
+            <div class="d-flex flex-row gap-3 m-auto col-12 justify-content-center">
+                <label class="col-sm-2 col-form-label" for="Nome">Senha:*</label>
+                <input id="Senha" class="form-control" type="text" placeholder="Senha" data-bind="value: Senha, click: reset" />
+            </div>
+            <div class="d-flex flex-row gap-3 m-auto col-12 justify-content-center">
+                <label class="col-sm-2 col-form-label" for="Salario">Salário:</label>
+                <input id="Salario" class="form-control" type="text" placeholder="Salário" data-bind="value: Salario" />
+            </div>
+            <div class="d-flex flex-row gap-3 m-auto col-12 justify-content-center">
+                <label class="col-sm-2 col-form-label" for="Nome">Limite:</label>
+                <input id="Limite" class="form-control" type="text" placeholder="Limite" data-bind="value: Limite" />
+            </div>
+            <div class="d-flex flex-row gap-3 m-auto col-12 justify-content-center">
+                <label class="col-sm-2 col-form-label" for="Minimo">Mínimo:*</label>
+                <input id="Minimo" class="form-control" type="text" placeholder="Mínimo" data-bind="value: Minimo, click: reset" />
+            </div>
+            <div class="d-flex flex-row gap-3 m-auto col-10 justify-content-center">
                 <a href="/Login/Index" class="text-decoration-none">Login</a>
             </div>
-            <button class="btn btn-primary" data-bind="click: Send.bind(Nome)">Entrar</button>
+            <button class="btn btn-primary" data-bind="click: Send.bind(Nome)">Cadastrar</button>
         </div>
     </div>
 </div>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="~/Scripts/jquery-3.4.1.js"></script>
+<script src="~/Scripts/knockout-3.5.1.js"></script>
 @Styles.Render("~/Content/css")
 @Scripts.Render("~/bundles/modernizr")
 @Scripts.Render("~/bundles/jquery")
-<script src="~/Scripts/jquery-3.4.1.js"></script>
-<script src="~/Scripts/knockout-3.5.1.js"></script>
-<script type="text/javascript">
-
-    var buttonViewModel = function (num) {
-        this.Count = ko.computed(function () { return this.num() }, this)
-    }
-    function Send(Usuario) {
-        console.log(Usuario)
-        $.ajax({
-            type: "POST",
-            url: "/Repositorio/Salvar",
-            content: "application/json; charset=utf-8",
-            dataType: "json",
-            data: {
-                PES_NOME: Usuario.Nome(), PES_EMAIL: Usuario.Email(),
-                PES_SENHA: Usuario.Senha(), PES_SALARIO: Usuario.Salario(),
-                PES_LIMITE: Usuario.Limite(), PES_MINIMO: Usuario.Minimo()
-            },
-            success: function (Usuario) {
-                alert(Usuario);
-                window.location.href = "/Login/Index"
-            },
-            error: function () {
-                alert("error");
-            }
-        });
-
-    }
-    function login(Nome, Email, Senha, Salario, Limite, Minimo) {
-        this.Nome = Nome
-        this.Email = Email
-        this.Senha = Senha
-        this.Salario = Salario
-        this.Limite = Limite
-        this.Minimo = Minimo
-    }
-    function loginViewModel(prop) {
-        this.Email = ko.observable(prop.Email);
-        this.Nome = ko.observable(prop.Nome);
-        this.Senha = ko.observable(prop.Senha);
-        this.Salario = ko.observable(prop.Salario);
-        this.Limite = ko.observable(prop.Limite);
-        this.Minimo = ko.observable(prop.Minimo);
-    }
-    var prop = new login("", "")
-    var UserLogin = new loginViewModel(prop)
-    ko.applyBindings(UserLogin);
-</script>
+@Scripts.Render("~/bundles/Login/Register")

@@ -6,6 +6,10 @@ using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 using WebCadastro.Models;
+using System.Net.Mail;
+using SendGrid;
+using SendGrid.Helpers.Mail;
+using System.Threading.Tasks;
 
 namespace WebCadastro.Controllers
 {
@@ -17,28 +21,44 @@ namespace WebCadastro.Controllers
             {
                 try
                 {
-                    session.SaveOrUpdate(pessoa);
+                    var Buscar = session.Query<Pessoas>().Where(i => i.PES_EMAIL == pessoa.PES_EMAIL).ToList();
+                    if (Buscar.Count == 1)
+                    {
+                        return Json("Erro");
+                    }
+                    else
+                    {
+                        pessoa.PES_SENHA = BCrypt.Net.BCrypt.HashPassword(pessoa.PES_SENHA);
+                        session.SaveOrUpdate(pessoa);
+                        return Json("Certo");
+                    }
                 }
-                catch (Exception ex)
+                catch
                 {
                     throw;
                 }
 
             }
-            return Json("Usuário Cadastrado");
         }
         public ActionResult Entrar(Pessoas pessoa)
         {
             using (ISession session = NHibernateHelper.OpenSession())
             {
-                var Login = session.Query<Pessoas>().Where(i => i.PES_EMAIL == pessoa.PES_EMAIL && i.PES_SENHA == pessoa.PES_SENHA).ToList();
-                if (Login.Count <= 0)
+                try
+                {
+                    var Login = session.Query<Pessoas>().Where(i => i.PES_EMAIL == pessoa.PES_EMAIL).ToList();
+                    bool verified = BCrypt.Net.BCrypt.Verify(pessoa.PES_SENHA, Login[0].PES_SENHA);
+                    if (verified)
+                    {
+                        return Json(Login);
+                    }
+                    else
+                    {
+                        return Json("Usuário não encontrado");
+                    }
+                } catch
                 {
                     return Json("Usuário não encontrado");
-                }
-                else
-                {
-                    return Json(Login);
                 }
             }
         }
@@ -49,12 +69,12 @@ namespace WebCadastro.Controllers
                 var Login = session.Query<Pessoas>().Where(i => i.PES_ID == pessoa.PES_ID).ToList();
                 Login[0].PES_NOME = pessoa.PES_NOME;
                 Login[0].PES_EMAIL = pessoa.PES_EMAIL;
-                Login[0].PES_SENHA = pessoa.PES_SENHA;
+                Login[0].PES_SENHA = BCrypt.Net.BCrypt.HashPassword(pessoa.PES_SENHA);
                 Login[0].PES_SALARIO = pessoa.PES_SALARIO;
                 Login[0].PES_LIMITE = pessoa.PES_LIMITE;
                 Login[0].PES_MINIMO = pessoa.PES_MINIMO;
                 session.Flush();
-                return Json("Chegouaq");
+                return Json("C");
                 
             }
         }
@@ -67,16 +87,18 @@ namespace WebCadastro.Controllers
                 var Valor = Convert.ToDecimal(ValorReplaced);
                 var prevSaldo = session.Get<Pessoas>(entrada.PES_ID).PES_SALDO;
                 var Saldo = prevSaldo + Valor;
+                var pessoa = session.Query<Pessoas>().Where(i => i.PES_ID == entrada.PES_ID).ToList();
                 
                 try
                 {
+                    
                     session.SaveOrUpdate(entrada);
                     session.CreateSQLQuery("UPDATE Pessoas SET PES_SALDO = :SALDO WHERE PES_ID = :ID")
                         .SetParameter("SALDO", Saldo)
                         .SetParameter("ID", entrada.PES_ID)
                         .ExecuteUpdate();
                 }
-                catch (Exception ex)
+                catch
                 {
                     throw;
                 }
@@ -92,15 +114,16 @@ namespace WebCadastro.Controllers
                 var Valor = Convert.ToDecimal(ValorReplaced);
                 var prevSaldo = session.Get<Pessoas>(saida.PES_ID).PES_SALDO;
                 var Saldo = prevSaldo - Valor;
+                var Login = session.Get<Pessoas>(saida.PES_ID);
                 try
-                {
+                {       
                     session.SaveOrUpdate(saida);
                     session.CreateSQLQuery("UPDATE Pessoas SET PES_SALDO = :SALDO WHERE PES_ID = :ID")
                         .SetParameter("SALDO", Saldo)
                         .SetParameter("ID", saida.PES_ID)
                         .ExecuteUpdate();
                 }
-                catch (Exception ex)
+                catch
                 {
                     throw;
                 }
@@ -116,7 +139,7 @@ namespace WebCadastro.Controllers
                     var Saldo = session.Get<Pessoas>(Id);
                     return Json(Saldo.PES_SALDO);
                 }
-                catch (Exception ex)
+                catch
                 {
                     throw;
                 }
@@ -131,22 +154,22 @@ namespace WebCadastro.Controllers
                     var Pessoa = session.Get<Pessoas>(Id);
                     return Json(Pessoa.PES_NOME);
                 }
-                catch (Exception ex)
+                catch
                 {
                     throw;
                 }
             }
         }
-        public ActionResult getUserInfo(int Id)
+        public ActionResult GetUserInfo(int Id)
         {
             using (ISession session = NHibernateHelper.OpenSession())
             {
                 try
                 {
-                    var Pessoa = session.Get<Pessoas>(Id);
-                    return Json(Pessoa);
+                    var Pessoa = session.Query<Pessoas>().Where(x => x.PES_ID == Id).ToList();
+                    return Json(Pessoa[0]);
                 }
-                catch (Exception ex)
+                catch
                 {
                     throw;
                 }
@@ -190,7 +213,7 @@ namespace WebCadastro.Controllers
                     //lista.Add(UltimasEnt);
                     return Json(retorno);
                 }
-                catch (Exception ex)
+                catch
                 {
                     throw;
                 }
@@ -205,10 +228,59 @@ namespace WebCadastro.Controllers
                     var pessoas = session.Query<Pessoas>().ToList();
                     return Json(pessoas);
                 }
-                catch (Exception ex)
+                catch
                 {
                     throw;
                 }
+            }
+        }
+        public ActionResult DeletarEnt(int Id)
+        {
+            using (ISession session = NHibernateHelper.OpenSession())
+            {
+                try
+                {
+                    session.CreateQuery("DELETE FROM Entrada WHERE ENT_ID = :Id")
+                    .SetParameter("Id", Id)
+                    .ExecuteUpdate();
+                    return Json("Foi");
+                } catch 
+                {
+                    throw;
+                }
+            }
+        }
+        public ActionResult DeletarSai(int Id)
+        {
+            using (ISession session = NHibernateHelper.OpenSession())
+            {
+                try
+                {
+                    session.CreateQuery("DELETE FROM Saida WHERE SAI_ID = :Id")
+                    .SetParameter("Id", Id)
+                    .ExecuteUpdate();
+                    return Json("Foi");
+                }
+                catch
+                {
+                    throw;
+                }
+            }
+        } 
+        public ActionResult DeletarUsuario(int Id)
+        {
+            using (ISession session = NHibernateHelper.OpenSession())
+            {
+                session.CreateQuery("DELETE FROM Saida WHERE PES_ID = :Id")
+                .SetParameter("Id", Id)
+                .ExecuteUpdate();
+                session.CreateQuery("DELETE FROM Entrada WHERE PES_ID = :Id")
+                .SetParameter("Id", Id)
+                .ExecuteUpdate();
+                session.CreateQuery("DELETE FROM Pessoas WHERE PES_ID = :Id")
+                .SetParameter("Id", Id)
+                .ExecuteUpdate();
+                return Json("Usuário Deletado");
             }
         }
     }
