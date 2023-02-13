@@ -11,16 +11,15 @@
     }
 }
 
-
-if (localStorage.getItem("Id") != 3) {
-    localStorage.clear()
-    window.location.href = "/Login/Index"
-}
 function Sair() {
     localStorage.clear()
     sessionStorage.clear()
     window.location.href = "/Login/Index"
 }
+
+if (sessionStorage.length == 0)
+    document.getElementById("Traco").style.visibility = "hidden"
+
 function call(Filtro) {
     var Nome = Filtro.BuscarNome()
     var Email = Filtro.BuscarEmail()
@@ -40,7 +39,7 @@ function call(Filtro) {
         }
     }
     else {
-        var filterId = DATA.filter(i => i.PES_ID == Id)
+        var filterId = DATA.filter(i => parseInt(i.PES_ID).toString().match(Id.toString()))
         if (Nome == null || Nome == "" && Email == null || Email == "") {
             Render(filterId)
         } else {
@@ -108,6 +107,8 @@ function Selecionar(IdT) {
                 title: 'Ok!',
                 text: 'Usuário '+Id+' selecionado!',
             })
+            console.log("123")
+            document.getElementById("Traco").style.visibility = "visible"
             DATA = Response
             Movimento.Nome(DATA)
             sessionStorage.setItem("Nome", DATA)

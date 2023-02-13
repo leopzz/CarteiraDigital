@@ -10,19 +10,55 @@ namespace WebCadastro.Controllers
     {
         public ActionResult Index()
         {
-            return View();
+            HttpCookie Id = Request.Cookies["Id"];
+            if (Id.Value == "3")
+            {
+                return View();
+            }
+            else
+            {
+                return Redirect("/Login/Index");
+            }
+           
         }
         public ActionResult Relatorio()
         {
-            return View();
+            HttpCookie Id = Request.Cookies["Id"];
+            if (Id.Value == "3")
+            {
+                return View();
+            }
+            else
+            {
+                return Redirect("/Login/Index");
+            }
+
         }
         public ActionResult Movimentacao()
         {
-            return View();
+            HttpCookie Id = Request.Cookies["Id"];
+            if (Id.Value == "3")
+            {
+                return View();
+            }
+            else
+            {
+                return Redirect("/Login/Index");
+            }
+
         }
         public ActionResult Conta()
         {
-            return View();
+            HttpCookie Id = Request.Cookies["Id"];
+            if (Id.Value == "3")
+            {
+                return View();
+            }
+            else
+            {
+                return Redirect("/Login/Index");
+            }
+
         }
     }
 }

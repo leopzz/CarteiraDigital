@@ -1,15 +1,11 @@
 ﻿using NHibernate;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 using WebCadastro.Models;
-using System.Net.Mail;
-using SendGrid;
-using SendGrid.Helpers.Mail;
-using System.Threading.Tasks;
+
 
 namespace WebCadastro.Controllers
 {
@@ -50,6 +46,10 @@ namespace WebCadastro.Controllers
                     bool verified = BCrypt.Net.BCrypt.Verify(pessoa.PES_SENHA, Login[0].PES_SENHA);
                     if (verified)
                     {
+                        HttpCookie Id = new HttpCookie("Id", Login[0].PES_ID.ToString());
+                        Id.Expires = DateTime.Now.AddDays(2);
+                        Response.Cookies.Add(Id);
+
                         return Json(Login);
                     }
                     else
@@ -208,9 +208,6 @@ namespace WebCadastro.Controllers
 
                         });
                     retorno.OrderBy(x => x.Data);
-                    //ArrayList lista = new ArrayList();
-                    //lista.Add(UltimasSai);
-                    //lista.Add(UltimasEnt);
                     return Json(retorno);
                 }
                 catch
